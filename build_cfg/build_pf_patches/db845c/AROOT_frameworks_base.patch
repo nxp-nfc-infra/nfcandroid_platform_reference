@@ -1,5 +1,5 @@
 diff --git a/core/java/android/nfc/INfcAdapter.aidl b/core/java/android/nfc/INfcAdapter.aidl
-index cb9a3e43db81..c3777d9396cf 100644
+index cb9a3e43db81..5a141b030433 100644
 --- a/core/java/android/nfc/INfcAdapter.aidl
 +++ b/core/java/android/nfc/INfcAdapter.aidl
 @@ -13,6 +13,26 @@
@@ -41,7 +41,7 @@ index cb9a3e43db81..c3777d9396cf 100644
      boolean isControllerAlwaysOnSupported();
      void registerControllerAlwaysOnListener(in INfcControllerAlwaysOnListener listener);
      void unregisterControllerAlwaysOnListener(in INfcControllerAlwaysOnListener listener);
-+    IBinder getNxpNfcDiscoveryProfileAdapterVendorInterface(in String vendor);
++    IBinder getProfileDiscoveryAdapterVendorInterface(in String vendor);
  }
 diff --git a/core/java/android/os/BinderProxy.java b/core/java/android/os/BinderProxy.java
 index 63306612fdaf..3a64b6cb9bdb 100644

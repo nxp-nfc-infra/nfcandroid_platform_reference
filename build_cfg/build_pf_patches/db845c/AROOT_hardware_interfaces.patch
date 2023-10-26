@@ -1,5 +1,5 @@
 diff --git a/compatibility_matrices/compatibility_matrix.6.xml b/compatibility_matrices/compatibility_matrix.6.xml
-index e19d2dd12..d52ddecd7 100644
+index e19d2dd12..b81a4f719 100644
 --- a/compatibility_matrices/compatibility_matrix.6.xml
 +++ b/compatibility_matrices/compatibility_matrix.6.xml
 @@ -654,4 +654,20 @@
@@ -18,13 +18,13 @@ index e19d2dd12..d52ddecd7 100644
 +        <name>android.hardware.emvco</name>
 +        <version>1</version>
 +        <interface>
-+            <name>INxpEmvco</name>
++            <name>IEmvco</name>
 +            <instance>default</instance>
 +        </interface>
 +    </hal>
  </compatibility-matrix>
 diff --git a/compatibility_matrices/compatibility_matrix.current.xml b/compatibility_matrices/compatibility_matrix.current.xml
-index 886f7f5b3..8d0d529c7 100644
+index 886f7f5b3..61f0c105c 100644
 --- a/compatibility_matrices/compatibility_matrix.current.xml
 +++ b/compatibility_matrices/compatibility_matrix.current.xml
 @@ -812,4 +812,12 @@
@@ -35,7 +35,7 @@ index 886f7f5b3..8d0d529c7 100644
 +        <name>android.hardware.emvco</name>
 +        <version>1</version>
 +        <interface>
-+            <name>INxpEmvco</name>
++            <name>IEmvco</name>
 +            <instance>default</instance>
 +        </interface>
 +    </hal>
