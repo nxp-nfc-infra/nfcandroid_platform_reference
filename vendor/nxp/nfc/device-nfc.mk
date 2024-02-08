@@ -4,7 +4,7 @@
 
 NXP_NFC_HOST := $(TARGET_PRODUCT)
 ifndef TARGET_NXP_NFC_HW
-NXP_NFC_HW := pn7220
+NXP_NFC_HW := pn7220_i2cs
 else
 NXP_NFC_HW := $(TARGET_NXP_NFC_HW)
 endif
@@ -22,7 +22,7 @@ PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.nfc.hce.xml:system/etc/permissions/android.hardware.nfc.hce.xml \
     frameworks/native/data/etc/android.hardware.nfc.hcef.xml:system/etc/permissions/android.hardware.nfc.hcef.xml \
     frameworks/native/data/etc/android.hardware.nfc.xml:system/etc/permissions/android.hardware.nfc.xml \
-    vendor/$(NXP_VENDOR_DIR)/frameworks/com.nxp.nfc.xml:system/etc/permissions/com.nxp.nfc.xml
+    vendor/$(NXP_VENDOR_DIR)/frameworks/nfc/com.nxp.nfc.xml:system/etc/permissions/com.nxp.nfc.xml
 
 # NFC config files
 PRODUCT_COPY_FILES += \
@@ -30,10 +30,21 @@ PRODUCT_COPY_FILES += \
     vendor/$(NXP_VENDOR_DIR)/nfc/hw/$(NXP_NFC_HW)/libnfc-nxp.conf:vendor/etc/libnfc-nxp.conf \
     vendor/$(NXP_VENDOR_DIR)/nfc/hw/init.module.nfc.rc:vendor/etc/init/init.module.nfc.rc
 
-ifeq ($(NXP_NFC_HW),pn7220)
+ifneq ($(NXP_NFC_HW),pn7160)
 PRODUCT_COPY_FILES += \
     vendor/$(NXP_VENDOR_DIR)/nfc/hw/$(NXP_NFC_HW)/libnfc-nxp-eeprom.conf:vendor/etc/libnfc-nxp-eeprom.conf
 endif
+
+ifeq ($(NXP_NFC_HW),pn7220_i2cs)
+PRODUCT_COPY_FILES += \
+    vendor/$(NXP_VENDOR_DIR)/nfc/hw/$(NXP_NFC_HW)/libnfc-nxp-rfExt.conf:vendor/etc/libnfc-nxp-rfExt.conf
+endif
+
+ifeq ($(NXP_NFC_HW),pn7221_i2cs)
+PRODUCT_COPY_FILES += \
+    vendor/$(NXP_VENDOR_DIR)/nfc/hw/$(NXP_NFC_HW)/libnfc-nxp-rfExt.conf:vendor/etc/libnfc-nxp-rfExt.conf
+endif
+
 ifeq ($(NXP_NFC_HW),pn7160)
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.sofware.nfc.beam.xml:system/etc/permissions/android.sofware.nfc.beam.xml

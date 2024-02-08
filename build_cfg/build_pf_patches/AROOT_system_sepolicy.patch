@@ -1,0 +1,72 @@
+diff --git a/Android.mk b/Android.mk
+index 8fd90b0ca..1c0cce7e4 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -54,14 +54,14 @@ PLAT_VENDOR_POLICY := $(LOCAL_PATH)/vendor
+ REQD_MASK_POLICY := $(LOCAL_PATH)/reqd_mask
+ 
+ SYSTEM_EXT_PUBLIC_POLICY := $(SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS)
+-ifneq (,$(BOARD_PLAT_PUBLIC_SEPOLICY_DIR))
++ifneq (,$(SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS))
+   # TODO: Disallow BOARD_PLAT_*
+-  SYSTEM_EXT_PUBLIC_POLICY += $(BOARD_PLAT_PUBLIC_SEPOLICY_DIR)
++  SYSTEM_EXT_PUBLIC_POLICY += $(SYSTEM_EXT_PUBLIC_SEPOLICY_DIRS)
+ endif
+ SYSTEM_EXT_PRIVATE_POLICY := $(SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS)
+-ifneq (,$(BOARD_PLAT_PRIVATE_SEPOLICY_DIR))
++ifneq (,$(SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS))
+   # TODO: Disallow BOARD_PLAT_*
+-  SYSTEM_EXT_PRIVATE_POLICY += $(BOARD_PLAT_PRIVATE_SEPOLICY_DIR)
++  SYSTEM_EXT_PRIVATE_POLICY += $(SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS)
+ endif
+ 
+ PRODUCT_PUBLIC_POLICY := $(PRODUCT_PUBLIC_SEPOLICY_DIRS)
+diff --git a/prebuilts/api/32.0/public/service.te b/prebuilts/api/32.0/public/service.te
+index ba7837d56..05267d617 100644
+--- a/prebuilts/api/32.0/public/service.te
++++ b/prebuilts/api/32.0/public/service.te
+@@ -268,7 +268,6 @@ type hal_secureclock_service, vendor_service, protected_service, service_manager
+ type hal_sharedsecret_service, vendor_service, protected_service, service_manager_type;
+ type hal_vibrator_service, vendor_service, protected_service, service_manager_type;
+ type hal_weaver_service, vendor_service, protected_service, service_manager_type;
+-
+ ###
+ ### Neverallow rules
+ ###
+diff --git a/prebuilts/api/33.0/public/attributes b/prebuilts/api/33.0/public/attributes
+index 742264a55..d43394e9d 100644
+--- a/prebuilts/api/33.0/public/attributes
++++ b/prebuilts/api/33.0/public/attributes
+@@ -395,7 +395,6 @@ hal_attribute(weaver);
+ hal_attribute(wifi);
+ hal_attribute(wifi_hostapd);
+ hal_attribute(wifi_supplicant);
+-
+ # HwBinder services offered across the core-vendor boundary
+ #
+ # We annotate server domains with x_server  to loosen the coupling between
+diff --git a/public/attributes b/public/attributes
+index 742264a55..d43394e9d 100644
+--- a/public/attributes
++++ b/public/attributes
+@@ -395,7 +395,6 @@ hal_attribute(weaver);
+ hal_attribute(wifi);
+ hal_attribute(wifi_hostapd);
+ hal_attribute(wifi_supplicant);
+-
+ # HwBinder services offered across the core-vendor boundary
+ #
+ # We annotate server domains with x_server  to loosen the coupling between
+diff --git a/vendor/file_contexts b/vendor/file_contexts
+index 392a750fd..bc1b8ad0a 100644
+--- a/vendor/file_contexts
++++ b/vendor/file_contexts
+@@ -69,7 +69,7 @@
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.memtrack-service.example    u:object_r:hal_memtrack_default_exec:s0
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.nfc@1\.0-service            u:object_r:hal_nfc_default_exec:s0
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.nfc@1\.1-service            u:object_r:hal_nfc_default_exec:s0
+-/(vendor|system/vendor)/bin/hw/android\.hardware\.nfc@1\.2-service            u:object_r:hal_nfc_default_exec:s0
++/(vendor|system/vendor)/bin/hw/android\.hardware\.nfc_pn72xx@1\.2-service            u:object_r:hal_nfc_default_exec:s0
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.media\.omx@1\.0-service            u:object_r:mediacodec_exec:s0
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.power@1\.0-service          u:object_r:hal_power_default_exec:s0
+ /(vendor|system/vendor)/bin/hw/android\.hardware\.power-service\.example       u:object_r:hal_power_default_exec:s0

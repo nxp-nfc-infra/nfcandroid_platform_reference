@@ -1,5 +1,5 @@
 diff --git a/dtaLib/Android.bp b/dtaLib/Android.bp
-index 3dce361a..227e4670 100644
+index 3dce361a..2537b8ef 100644
 --- a/dtaLib/Android.bp
 +++ b/dtaLib/Android.bp
 @@ -40,8 +40,8 @@ cc_library_shared {
@@ -13,8 +13,31 @@ index 3dce361a..227e4670 100644
      ],
      local_include_dirs: [
          "inc/",
+@@ -49,7 +49,7 @@ cc_library_shared {
+     cflags: [
+         "-DTHREAD_PRIO_SUPPORT=FALSE",
+         "-DNFC_NXP_P2P_PERFORMANCE_TESTING=FALSE",
+-        "-DP2P_ENABLE=TRUE",
++        "-DP2P_ENABLE=FALSE",
+     ],
+     srcs: [
+         "src/src/*.c",
+diff --git a/dtaLib/src/src/phDTALib.c b/dtaLib/src/src/phDTALib.c
+index 3d103ca3..907da65f 100755
+--- a/dtaLib/src/src/phDTALib.c
++++ b/dtaLib/src/src/phDTALib.c
+@@ -864,7 +864,9 @@ void phDtaLibi_CbMsgHandleThrd(void *param) {
+     MWIFSTATUS dwMwIfStatus = 0;
+     DTASTATUS  dwDtaStatus=0;
+     phMwIf_eProtocolType_t eProtocolype;
++#if (P2P_ENABLE == TRUE)
+     phMWIf_eDiscType_t eDiscType;
++#endif
+     phMWIf_eDeactivateType_t eDeactType;
+     BOOLEAN   bDiscStartReqd = TRUE;
+     BOOLEAN   bDiscStopReqd  = TRUE;
 diff --git a/dtaMwAl/src/comps/android/Android.bp b/dtaMwAl/src/comps/android/Android.bp
-index 649b3b61..fa483762 100644
+index 649b3b61..1609d824 100644
 --- a/dtaMwAl/src/comps/android/Android.bp
 +++ b/dtaMwAl/src/comps/android/Android.bp
 @@ -39,7 +39,7 @@ cc_library_shared {
@@ -34,8 +57,9 @@ index 649b3b61..fa483762 100644
 +        "-DANDROID_S=TRUE",
          "-DNXP_QTAG=TRUE",
 -        "-DANDROID_U=TRUE",
+-        "-DP2P_ENABLE=TRUE",
 +        "-DANDROID_U=FALSE",
-         "-DP2P_ENABLE=TRUE",
++        "-DP2P_ENABLE=FALSE",
 +        "-DNXP_PLATFORM_PN7220=TRUE",
      ],
      srcs: [
@@ -60,7 +84,7 @@ index 649b3b61..fa483762 100644
      ],
      local_include_dirs: [
 diff --git a/dtaMwAl/src/comps/android/src/phMwIfAndroid.cpp b/dtaMwAl/src/comps/android/src/phMwIfAndroid.cpp
-index fb9a93e6..92c000f9 100755
+index fb9a93e6..20c71940 100755
 --- a/dtaMwAl/src/comps/android/src/phMwIfAndroid.cpp
 +++ b/dtaMwAl/src/comps/android/src/phMwIfAndroid.cpp
 @@ -364,6 +364,7 @@ MWIFSTATUS phMwIf_ConfigParams(void* mwIfHandle, phMwIf_sConfigParams_t *sConfig
@@ -126,6 +150,15 @@ index fb9a93e6..92c000f9 100755
      abConfigIDData[0] = 0xE8;
      abConfigIDData[1] = 0x03;
      phMwIfi_SetConfig(mwIfHdl, PHMWIF_NCI_CONFIG_TOTAL_DURATION, 0x02, abConfigIDData);
+@@ -2032,7 +2039,7 @@ tNFA_STATUS phMwIfi_SelectDevice(){
+                 {
+                     count = 0;
+                    // Android14 P2P (NFC_DEP protocol) is not supported, count=1 is set to send ISO_DEP protocol
+-                    #if(ANDROID_U == TRUE)
++                    #if(P2P_ENABLE == FALSE)
+                         if(strcmp(mwIfHdl->sPrevMwIfDiscCfgParams.Certification_Release,"CR13") == 0x00)
+                            count = 1;
+                     #endif
 diff --git a/dtaPlatform/phDtaOsal/src/comps/android/Android.bp b/dtaPlatform/phDtaOsal/src/comps/android/Android.bp
 index 02b8d020..2323d720 100644
 --- a/dtaPlatform/phDtaOsal/src/comps/android/Android.bp
@@ -150,9 +183,18 @@ index 02b8d020..2323d720 100644
  
      srcs: [
 diff --git a/dtaUI/dtaGui/src/comps/android/jni/Android.bp b/dtaUI/dtaGui/src/comps/android/jni/Android.bp
-index 0c40412c..6480badb 100644
+index 0c40412c..84f2fa8d 100644
 --- a/dtaUI/dtaGui/src/comps/android/jni/Android.bp
 +++ b/dtaUI/dtaGui/src/comps/android/jni/Android.bp
+@@ -22,7 +22,7 @@ cc_library_shared {
+         "-Wno-unused-parameter",
+         "-Werror",
+         "-fexceptions",
+-        "-DP2P_ENABLE=TRUE",
++        "-DP2P_ENABLE=FALSE",
+     ],
+ 
+     arch: {
 @@ -38,8 +38,8 @@ cc_library_shared {
          "system/nfc-dta/dtaPlatform/phDtaOsal/inc",
          "system/nfc-dta/dtaPlatform/phDtaOsal/src/comps/android/inc",

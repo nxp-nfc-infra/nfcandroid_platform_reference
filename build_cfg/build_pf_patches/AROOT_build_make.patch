@@ -32,26 +32,26 @@ index c63c6dfde9..10cb30ff55 100644
  define add-required-deps
  $(1): | $(2)
 diff --git a/target/product/gsi/33.txt b/target/product/gsi/33.txt
-index 03a143d02c..060be5d09d 100644
+index 03a143d02c..eadece0778 100644
 --- a/target/product/gsi/33.txt
 +++ b/target/product/gsi/33.txt
 @@ -180,6 +180,7 @@ VNDK-core: libwifi-system-iface.so
  VNDK-core: libxml2.so
  VNDK-core: libyuv.so
  VNDK-core: libziparchive.so
-+VNDK-core: android.hardware.emvco-V1-ndk.so
++VNDK-core: vendor.nxp.emvco-V1-ndk.so
  VNDK-private: libbacktrace.so
  VNDK-private: libblas.so
  VNDK-private: libcompiler_rt.so
 diff --git a/target/product/gsi/current.txt b/target/product/gsi/current.txt
-index 03a143d02c..060be5d09d 100644
+index 03a143d02c..eadece0778 100644
 --- a/target/product/gsi/current.txt
 +++ b/target/product/gsi/current.txt
 @@ -180,6 +180,7 @@ VNDK-core: libwifi-system-iface.so
  VNDK-core: libxml2.so
  VNDK-core: libyuv.so
  VNDK-core: libziparchive.so
-+VNDK-core: android.hardware.emvco-V1-ndk.so
++VNDK-core: vendor.nxp.emvco-V1-ndk.so
  VNDK-private: libbacktrace.so
  VNDK-private: libblas.so
  VNDK-private: libcompiler_rt.so

@@ -5,8 +5,8 @@ ifeq ($(strip $(TARGET_NXP_NFC_HW)),)
 endif
 
 PRODUCT_PACKAGES += \
-    android.hardware.emvco-V1-ndk \
-    android.hardware.emvco-service \
+    vendor.nxp.emvco-V1-ndk \
+    vendor.nxp.emvco-service \
     EMVCoAidlHalComplianceTest \
     EMVCoAidlHalDesfireTest \
     EMVCoModeSwitchApp \
