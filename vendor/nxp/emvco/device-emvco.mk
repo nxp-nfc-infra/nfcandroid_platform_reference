@@ -34,6 +34,7 @@ PRODUCT_PACKAGES += \
     EMVCoAidlHalTDATest
 else ifeq ($(NXP_NFC_HW),pn7221_i2cs)
 PRODUCT_PACKAGES += \
+    EMVCoModeSwitchVasApp \
     vendor.nxp.emvco-V1-ndk \
     vendor.nxp.emvco-service \
     EMVCoAidlHalComplianceTest \
