@@ -1,0 +1,12 @@
+diff --git a/Android.bp b/Android.bp
+index 340a194ac8..5f32a5fda6 100644
+--- a/Android.bp
++++ b/Android.bp
+@@ -902,6 +902,7 @@ cc_library {
+         "//system/update_engine",
+         "//test/sts/tests/hostside/securityPatch:__subpackages__",
+         "//vendor:__subpackages__",
++	"//system/nfc_tda",
+     ],
+ }
+ 

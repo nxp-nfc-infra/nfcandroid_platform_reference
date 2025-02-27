@@ -56,6 +56,7 @@ PRODUCT_PACKAGES += \
     VtsAidlHalNfcTargetTest \
     com.nxp.nfc \
     NxpDTA \
+    TR13.2_NXPDTA \
     nfc_tda \
     NfcTdaTestApp \
     JrcpProxyPallas

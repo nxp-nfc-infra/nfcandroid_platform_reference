@@ -1,15 +1,17 @@
 diff --git a/db845c.mk b/db845c.mk
-index e949af1..7a15fdb 100644
+index c83da69..ce912fc 100644
 --- a/db845c.mk
 +++ b/db845c.mk
-@@ -7,3 +7,5 @@ TARGET_USES_BOOT_HDR_V3 ?= true
- PRODUCT_NAME := db845c
- PRODUCT_DEVICE := db845c
- PRODUCT_BRAND := Android
-+
+@@ -5,6 +5,7 @@ $(call inherit-product, device/linaro/dragonboard/shared/graphics/drm_hwcomposer
+ $(call inherit-product, device/linaro/dragonboard/shared/graphics/mesa/device.mk)
+ $(call inherit-product, device/linaro/dragonboard/shared/graphics/minigbm_msm/device.mk)
+ $(call inherit-product, device/linaro/dragonboard/db845c/device.mk)
 +$(call inherit-product, vendor/nxp/nfc/device-nfc.mk)
+ 
+ #Boot with Android boot image header v3
+ ifeq ($(TARGET_KERNEL_USE),5.4)
 diff --git a/db845c/BoardConfig.mk b/db845c/BoardConfig.mk
-index 644f9a8..71b6f81 100644
+index ed9264c..440765b 100644
 --- a/db845c/BoardConfig.mk
 +++ b/db845c/BoardConfig.mk
 @@ -1,4 +1,5 @@
@@ -18,45 +20,42 @@ index 644f9a8..71b6f81 100644
  
  # Primary Arch
  TARGET_ARCH := arm64
-@@ -34,6 +35,7 @@ BOARD_KERNEL_PAGESIZE := 4096
- BOARD_KERNEL_CMDLINE += earlycon firmware_class.path=/vendor/firmware/
- BOARD_KERNEL_CMDLINE += init=/init printk.devkmsg=on
- BOARD_KERNEL_CMDLINE += deferred_probe_timeout=30
-+BOARD_KERNEL_CMDLINE += video=HDMI-A-1:1920x1080@60e drm.edid_firmware=edid/1920x1080.bin
- BOARD_KERNEL_CMDLINE += pcie_pme=nomsi #For WiFi to work on rb5
- BOARD_KERNEL_CMDLINE += qcom_geni_serial.con_enabled=1
- BOARD_KERNEL_CMDLINE += console=ttyMSM0,115200n8
-diff --git a/db845c/device.mk b/db845c/device.mk
-index ef754c1..cd3e1c2 100644
---- a/db845c/device.mk
-+++ b/db845c/device.mk
-@@ -54,5 +54,6 @@ $(call inherit-product-if-exists, vendor/linaro/rb5/$(EXPECTED_LINARO_VENDOR_VER
- 
- TARGET_HARDWARE := db845c
- TARGET_KERNEL_USE ?= 5.15
-+TARGET_KERNEL_USE ?= 5.10
- 
- include device/linaro/dragonboard/device-common.mk
 diff --git a/device-common.mk b/device-common.mk
-index d2d2036..2b2a74c 100644
+index 960c2ae..5637efb 100644
 --- a/device-common.mk
 +++ b/device-common.mk
-@@ -23,6 +23,10 @@ ifeq ($(TARGET_USES_GKI), true)
-   ifneq ($(TARGET_MODS),)
-     BOARD_DO_NOT_STRIP_VENDOR_RAMDISK_MODULES := true
-     BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(TARGET_MODS)
-+    DB845C_ONLY_VENDOR := $(wildcard $(TARGET_KERNEL_DIR)/nxpnfc_spi.ko)
+@@ -16,6 +16,7 @@
+ 
+ TARGET_KERNEL_DIR ?= device/linaro/dragonboard-kernel/android-$(TARGET_KERNEL_USE)
+ TARGET_MODS := $(wildcard $(TARGET_KERNEL_DIR)/*.ko)
++DB845C_ONLY_VENDOR := $(wildcard $(TARGET_KERNEL_DIR)/nxpnfc_spi.ko)
+ 
+ BOARD_DO_NOT_STRIP_VENDOR_RAMDISK_MODULES := true
+ BOARD_DO_NOT_STRIP_GENERIC_RAMDISK_MODULES := true
+@@ -23,13 +24,16 @@ ifeq ($(TARGET_SDCARD_BOOT), true)
+   # UFS module filename varies from ufs_qcom.ko to ufs-qcom.ko across different kernel versions
+   BOARD_VENDOR_KERNEL_MODULES := $(wildcard $(TARGET_KERNEL_DIR)/ufs*qcom.ko)
+   BOARD_GENERIC_RAMDISK_KERNEL_MODULES := $(filter-out $(BOARD_VENDOR_KERNEL_MODULES),$(TARGET_MODS))
++  BOARD_GENERIC_RAMDISK_KERNEL_MODULES += $(filter-out $(DB845C_ONLY_VENDOR),$(TARGET_MODS))
+ else ifeq ($(TARGET_USES_LMP), true)
+     include device/linaro/dragonboard/shared/utils/dlkm_loader/vendor.modules.list.mk
+     BOARD_VENDOR_KERNEL_MODULES := $(patsubst %,$(TARGET_KERNEL_DIR)/%,$(VENDOR_DLKM_KERNEL_MODULES_LIST))
+-    BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(patsubst %,$(TARGET_KERNEL_DIR)/%,$(VENDOR_RAMDISK_KERNEL_MODULES_LIST))
 +    BOARD_VENDOR_KERNEL_MODULES += $(DB845C_ONLY_VENDOR)
 +    BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(filter-out $(DB845C_ONLY_VENDOR),$(TARGET_MODS))
-+
-   endif
+     BOARD_SYSTEM_KERNEL_MODULES := $(filter-out $(BOARD_VENDOR_KERNEL_MODULES) $(BOARD_VENDOR_RAMDISK_KERNEL_MODULES), $(wildcard $(TARGET_KERNEL_DIR)/*.ko))
+ else
+-  BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(TARGET_MODS)
++  BOARD_VENDOR_KERNEL_MODULES += $(DB845C_ONLY_VENDOR)
++  BOARD_VENDOR_RAMDISK_KERNEL_MODULES := $(filter-out $(DB845C_ONLY_VENDOR),$(TARGET_MODS))
  endif
  
+ PRODUCT_SHIPPING_API_LEVEL := 33
 diff --git a/full.mk b/full.mk
-index e2fd3ee..445dbc6 100644
+index 00e3eb8..f445ddf 100644
 --- a/full.mk
 +++ b/full.mk
-@@ -132,8 +132,10 @@ PRODUCT_PACKAGES += \
+@@ -79,8 +79,10 @@ PRODUCT_PACKAGES += \
  #
  # PowerStats HAL
  #
@@ -67,31 +66,16 @@ index e2fd3ee..445dbc6 100644
  
  
  # Audio
-diff --git a/overlay/frameworks/base/core/res/res/values/config.xml b/overlay/frameworks/base/core/res/res/values/config.xml
-index 1cbe785..9e65886 100644
---- a/overlay/frameworks/base/core/res/res/values/config.xml
-+++ b/overlay/frameworks/base/core/res/res/values/config.xml
-@@ -77,5 +77,10 @@
-         <item>1</item>
-         <item>7</item>
-     </integer-array>
-+    <!--  Maximum number of supported users -->
-+    <integer name="config_multiuserMaximumUsers">2</integer>
-+
-+    <!-- Whether UI for multi user should be shown -->
-+    <bool name="config_enableMultiUserUI">true</bool>
- 
- </resources>
-diff --git a/qcom/init.qcom.rc b/qcom/init.qcom.rc
-index 38d8d00..b4d6e73 100644
---- a/qcom/init.qcom.rc
-+++ b/qcom/init.qcom.rc
+diff --git a/shared/utils/init.utils.rc b/shared/utils/init.utils.rc
+index a17edfd..3a1867b 100644
+--- a/shared/utils/init.utils.rc
++++ b/shared/utils/init.utils.rc
 @@ -37,6 +37,8 @@ on early-init
      start set_hw
      exec - root -- /vendor/bin/qrtr-cfg 1
      start qrtr-ns
 +    exec u:r:vendor_modprobe:s0 -- /vendor/bin/modprobe -a -d \
-+    /vendor/lib/modules nxpnfc_spi
++        /vendor/lib/modules nxpnfc_spi
  
  on post-fs
      start pd_mapper
@@ -104,10 +88,10 @@ index 38d8d00..b4d6e73 100644
      start rmtfs
  
 diff --git a/ueventd.common.rc b/ueventd.common.rc
-index 8ae7d94..387d04f 100644
+index 8ae7d94..9617a38 100644
 --- a/ueventd.common.rc
 +++ b/ueventd.common.rc
-@@ -13,3 +13,8 @@ subsystem usbmisc
+@@ -13,3 +13,7 @@ subsystem usbmisc
  # usb webcam?
  /dev/video0 0660 system camera
  /dev/video1 0660 system camera
@@ -115,4 +99,3 @@ index 8ae7d94..387d04f 100644
 +/dev/ttyACM0     0666 nfc nfc
 +/dev/ttyACM1     0666 nfc nfc
 +/dev/nxpnfc     0666 nfc nfc
-+

@@ -1,0 +1,10 @@
+diff --git a/flag_values/trunk_staging/RELEASE_PACKAGE_NFC_STACK.textproto b/flag_values/trunk_staging/RELEASE_PACKAGE_NFC_STACK.textproto
+index f0b126a9..1c3ce0f9 100644
+--- a/flag_values/trunk_staging/RELEASE_PACKAGE_NFC_STACK.textproto
++++ b/flag_values/trunk_staging/RELEASE_PACKAGE_NFC_STACK.textproto
+@@ -1,4 +1,4 @@
+ name: "RELEASE_PACKAGE_NFC_STACK"
+ value: {
+-  string_value: "com.android.nfcservices"
++  string_value: "NfcNci"
+ }
