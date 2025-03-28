@@ -13,9 +13,6 @@
 # limitations under the License.
 
 LOCAL_STEM := nfc/BoardConfigNfcPartial.mk
-#TODO This need to commented once sepolicy updated for emvco hal.
-BOARD_KERNEL_CMDLINE += androidboot.selinux=permissive
-#TODO: Check and remove BUILD_BROKEN_DUP_RULES usage (artf995547).
 DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE := vendor/nxp/nfc/framework_compatibility_matrix.xml
 DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE += vendor/nxp/emvco/emvco_framework_compatibility_matrix.xml
 BUILD_BROKEN_DUP_RULES := true

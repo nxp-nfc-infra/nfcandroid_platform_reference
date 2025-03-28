@@ -1,0 +1,4 @@
+set_prop(vendor_init, vendor_emvco_prop)
+
+#============= vendor_init ==============
+allow vendor_init vendor_emvco_prop:property_service set;

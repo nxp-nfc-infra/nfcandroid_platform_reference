@@ -1,0 +1,6 @@
+#EMVCO properties
+vendor.emvco.log_level_global    u:object_r:vendor_emvco_prop:s0
+vendor.emvco.log_level_extns     u:object_r:vendor_emvco_prop:s0
+vendor.emvco.log_level_hal	  u:object_r:vendor_emvco_prop:s0
+vendor.emvco.log_level_nci	  u:object_r:vendor_emvco_prop:s0
+vendor.emvco.log_level_tml	  u:object_r:vendor_emvco_prop:s0

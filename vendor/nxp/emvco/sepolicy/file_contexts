@@ -1,3 +1,7 @@
 # EMVCo labeling
 /(vendor|system/vendor)/bin/hw/vendor\.nxp\.emvco-service                     u:object_r:hal_emvco_default_exec:s0
 /data/vendor/etc(/.*)? u:object_r:emvco_vendor_data_file:s0
+/(vendor|system/vendor)/etc/EMVCoAidlHalComplianceTest                     u:object_r:emvco_client_app_exec:s0
+/(vendor|system/vendor)/etc/EMVCoAidlHalDesfireTest                     u:object_r:emvco_client_app_exec:s0
+/(vendor|system/vendor)/etc/EMVCoAidlHalTransacTest                     u:object_r:emvco_client_app_exec:s0
+/(vendor|system/vendor)/etc/EMVCoAidlHalTDATest                     u:object_r:emvco_client_app_exec:s0

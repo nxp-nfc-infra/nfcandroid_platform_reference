@@ -48,6 +48,8 @@ endif
 # NFC Init Files
 PRODUCT_COPY_FILES += \
      vendor/$(NXP_VENDOR_DIR)/nfc/hw/init.$(NXP_NFC_PLATFORM).nfc.rc:vendor/etc/init/init.$(NXP_NFC_HOST).nfc.rc
+PRODUCT_PACKAGES -= \
+com.android.nfcservices
 
 # Service framework, Jar and VTS packages required for all products
 PRODUCT_PACKAGES += \
@@ -55,8 +57,7 @@ PRODUCT_PACKAGES += \
     Tag \
     VtsAidlHalNfcTargetTest \
     com.nxp.nfc \
-    NxpDTA \
-    TR13.2_NXPDTA \
+    NXPDTA \
     nfc_tda \
     NfcTdaTestApp \
     JrcpProxyPallas

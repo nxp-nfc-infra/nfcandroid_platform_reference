@@ -1,0 +1,4 @@
+type emvco_client_app, domain;
+type emvco_client_app_exec, exec_type, vendor_file_type, file_type;
+allow emvco_client_app vendor_shell_exec:file execute;
+

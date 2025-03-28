@@ -50,6 +50,12 @@ ifeq ($(NXP_NFC_HW),pn7220_i2cs)
 BOARD_SEPOLICY_DIRS += vendor/$(NXP_VENDOR_DIR)/emvco/sepolicy
 PRODUCT_COPY_FILES += \
     vendor/$(NXP_VENDOR_DIR)/emvco/hw/$(NXP_NFC_HW)/libemvco-nxp.conf:vendor/etc/libemvco-nxp.conf
+else ifeq ($(NXP_NFC_HW),pn7220_i2cms)
+BOARD_SEPOLICY_DIRS += vendor/$(NXP_VENDOR_DIR)/emvco/sepolicy
+else ifeq ($(NXP_NFC_HW),pn7160)
+BOARD_SEPOLICY_DIRS += vendor/$(NXP_VENDOR_DIR)/emvco/sepolicy
+else ifeq ($(NXP_NFC_HW),pn7221_i2cms)
+BOARD_SEPOLICY_DIRS += vendor/$(NXP_VENDOR_DIR)/emvco/sepolicy
 else ifeq ($(NXP_NFC_HW),pn7221_i2cs)
 BOARD_SEPOLICY_DIRS += vendor/$(NXP_VENDOR_DIR)/emvco/sepolicy
 PRODUCT_COPY_FILES += \

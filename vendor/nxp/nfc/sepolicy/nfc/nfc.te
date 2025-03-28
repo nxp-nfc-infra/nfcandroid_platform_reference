@@ -3,3 +3,7 @@ allow nfc nfc_data_file:dir create_dir_perms;
 allow nfc nxpnfc_hwservice:hwservice_manager find;
 allow nfc nfc_vendor_data_file:dir { create_dir_perms add_name search read write create remove_name };
 allow nfc nfc_vendor_data_file:file create_file_perms;
+allow nfc hal_emvco_service:service_manager find;
+allow nfc hal_emvco_default:binder call;
+allow nfc hal_emvco_default:binder transfer;
+allow nfc vendor_hal_nxpnfc_service:service_manager find;
