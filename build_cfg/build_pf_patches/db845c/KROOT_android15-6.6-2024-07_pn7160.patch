@@ -1,0 +1,131 @@
+diff --git a/BUILD.bazel b/BUILD.bazel
+index e03bdcad4e33..e99f28d39e4f 100644
+--- a/BUILD.bazel
++++ b/BUILD.bazel
+@@ -325,6 +325,7 @@ _DB845C_MODULE_OUTS = [
+     "drivers/net/wireless/ath/ath11k/ath11k_ahb.ko",
+     "drivers/net/wireless/ath/ath11k/ath11k_pci.ko",
+     "drivers/nvmem/nvmem_qfprom.ko",
++    "drivers/nxp/nfc/nxpnfc_i2c.ko",
+     "drivers/phy/qualcomm/phy-qcom-qmp-combo.ko",
+     "drivers/phy/qualcomm/phy-qcom-qmp-pcie.ko",
+     "drivers/phy/qualcomm/phy-qcom-qmp-pcie-msm8996.ko",
+diff --git a/android/abi_gki_aarch64_db845c b/android/abi_gki_aarch64_db845c
+index 8d2e53e8b839..ee02c52ff628 100644
+--- a/android/abi_gki_aarch64_db845c
++++ b/android/abi_gki_aarch64_db845c
+@@ -1621,6 +1621,17 @@
+ # required by nvmem_qfprom.ko
+   devm_nvmem_register
+ 
++#required by nxpnfc_i2c.ko
++  __dynamic_pr_debug
++  cdev_add
++  cdev_del
++  device_create
++  device_destroy
++  gpio_free
++  gpio_request
++  gpiod_direction_input
++  gpiod_get_raw_value
++
+ # required by ohci-hcd.ko
+   dma_pool_create
+   dma_pool_destroy
+diff --git a/arch/arm64/boot/dts/qcom/sdm845-db845c.dts b/arch/arm64/boot/dts/qcom/sdm845-db845c.dts
+index 0a891a012244..7dd7c1a6f84b 100644
+--- a/arch/arm64/boot/dts/qcom/sdm845-db845c.dts
++++ b/arch/arm64/boot/dts/qcom/sdm845-db845c.dts
+@@ -258,8 +258,8 @@
+ 		compatible = "regulator-fixed";
+ 		regulator-name = "vreg_s4a_1p8";
+ 
+-		regulator-min-microvolt = <1800000>;
+-		regulator-max-microvolt = <1800000>;
++		regulator-min-microvolt = <1850000>;
++		regulator-max-microvolt = <1850000>;
+ 		regulator-always-on;
+ 	};
+ 
+@@ -510,14 +510,22 @@
+ 
+ &i2c11 {
+ 	/* On Low speed expansion */
+-	clock-frequency = <100000>;
++	clock-frequency = <1000000>;
+ 	status = "okay";
++	nxpnfc@28 {
++		compatible = "nxp,nxpnfc";
++		reg = <0x28>;
++		nxp,nxpnfc-irq = <&tlmm 49 00>;
++		nxp,nxpnfc-ven = <&tlmm 50 00>;
++		nxp,nxpnfc-fw-dwnld = <&tlmm 51 00>;
++		pinctrl-names = "default";
++	};
+ };
+ 
+ &i2c14 {
+ 	/* On Low speed expansion */
+ 	clock-frequency = <100000>;
+-	status = "okay";
++	status = "disabled";
+ };
+ 
+ &mdss {
+diff --git a/arch/arm64/boot/dts/qcom/sdm845.dtsi b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+index 5bf0d5af452a..f1e44aabc013 100644
+--- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
++++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+@@ -2878,6 +2878,7 @@
+ 			qup_i2c14_default: qup-i2c14-default-state {
+ 				pins = "gpio33", "gpio34";
+ 				function = "qup14";
++				bias-high-impedance;
+ 			};
+ 
+ 			qup_i2c15_default: qup-i2c15-default-state {
+diff --git a/arch/arm64/configs/db845c_gki.fragment b/arch/arm64/configs/db845c_gki.fragment
+index 1ce2966344b5..636e74c43e16 100644
+--- a/arch/arm64/configs/db845c_gki.fragment
++++ b/arch/arm64/configs/db845c_gki.fragment
+@@ -5,6 +5,7 @@ CONFIG_SCSI_UFS_QCOM=m
+ CONFIG_INPUT_PM8941_PWRKEY=m
+ CONFIG_SERIAL_MSM=m
+ CONFIG_I2C_QCOM_GENI=m
++CONFIG_NXP_NFC_I2C=m
+ CONFIG_I2C_QUP=m
+ CONFIG_PINCTRL_MSM=m
+ CONFIG_PINCTRL_QCOM_SPMI_PMIC=m
+diff --git a/drivers/Kconfig b/drivers/Kconfig
+index efb66e25fa2d..44bd885b6d58 100644
+--- a/drivers/Kconfig
++++ b/drivers/Kconfig
+@@ -243,4 +243,6 @@ source "drivers/hte/Kconfig"
+ 
+ source "drivers/cdx/Kconfig"
+ 
++source "drivers/nxp/Kconfig"
++
+ endmenu
+diff --git a/drivers/Makefile b/drivers/Makefile
+index 1bec7819a837..45df55c0b219 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -199,3 +199,4 @@ obj-$(CONFIG_DRM_ACCEL)		+= accel/
+ obj-$(CONFIG_CDX_BUS)		+= cdx/
+ 
+ obj-$(CONFIG_S390)		+= s390/
++obj-y				+= nxp/
+diff --git a/drivers/i2c/busses/i2c-qcom-geni.c b/drivers/i2c/busses/i2c-qcom-geni.c
+index 5cc32a465f12..21a6282a44d8 100644
+--- a/drivers/i2c/busses/i2c-qcom-geni.c
++++ b/drivers/i2c/busses/i2c-qcom-geni.c
+@@ -149,7 +149,7 @@ struct geni_i2c_clk_fld {
+ static const struct geni_i2c_clk_fld geni_i2c_clk_map[] = {
+ 	{KHZ(100), 7, 10, 11, 26},
+ 	{KHZ(400), 2,  5, 12, 24},
+-	{KHZ(1000), 1, 3,  9, 18},
++	{KHZ(1000), 1, 3,  9, 15},
+ };
+ 
+ static int geni_i2c_clk_map_idx(struct geni_i2c_dev *gi2c)
