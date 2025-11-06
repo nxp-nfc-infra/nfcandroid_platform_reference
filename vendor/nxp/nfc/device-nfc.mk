@@ -21,8 +21,7 @@ endif
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.nfc.hce.xml:system/etc/permissions/android.hardware.nfc.hce.xml \
     frameworks/native/data/etc/android.hardware.nfc.hcef.xml:system/etc/permissions/android.hardware.nfc.hcef.xml \
-    frameworks/native/data/etc/android.hardware.nfc.xml:system/etc/permissions/android.hardware.nfc.xml \
-    vendor/$(NXP_VENDOR_DIR)/frameworks/nfc/com.nxp.nfc.xml:system/etc/permissions/com.nxp.nfc.xml
+    frameworks/native/data/etc/android.hardware.nfc.xml:system/etc/permissions/android.hardware.nfc.xml
 
 # NFC config files
 PRODUCT_COPY_FILES += \
@@ -53,7 +52,6 @@ com.android.nfcservices
 
 # Service framework, Jar and VTS packages required for all products
 PRODUCT_PACKAGES += \
-    NfcNci \
     Tag \
     VtsAidlHalNfcTargetTest \
     com.nxp.nfc \
@@ -78,7 +76,7 @@ PRODUCT_PACKAGES += \
 endif
 
 PRODUCT_PACKAGES += \
-    android.hardware.nfc-service.nxp
+    android.hardware.nfc2-service.nxp
 
 ifeq ($(ENABLE_TREBLE), true)
 PRODUCT_PACKAGES += \

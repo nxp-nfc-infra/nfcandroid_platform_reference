@@ -1,0 +1,258 @@
+From 8fc1795ce4e31518a9fb5f28868231098300f08a Mon Sep 17 00:00:00 2001
+From: nxf97491 <sai.shwethas@nxp.com>
+Date: Mon, 7 Apr 2025 17:09:16 +0530
+Subject: [PATCH] Revert "drm_hwcomposer: uses edid DTD to get better estimate
+ of dpi"
+
+This reverts commit 30808a20bb364267f7da95ee07a78e244049089d.
+
+Change-Id: I2cbdc091ff85b4bd5d73c0eb1bd1240133713f3e
+---
+ hwc2_device/HwcDisplay.cpp      | 37 +++++---------------------
+ hwc2_device/HwcDisplay.h        |  2 --
+ hwc3/ComposerClient.cpp         | 30 ++++++++++-----------
+ utils/EdidWrapper.h             | 18 -------------
+ utils/LibdisplayEdidWrapper.cpp | 46 ---------------------------------
+ 5 files changed, 20 insertions(+), 113 deletions(-)
+
+diff --git a/hwc2_device/HwcDisplay.cpp b/hwc2_device/HwcDisplay.cpp
+index 2a47a2a..2608c4a 100644
+--- a/hwc2_device/HwcDisplay.cpp
++++ b/hwc2_device/HwcDisplay.cpp
+@@ -366,19 +366,6 @@ auto HwcDisplay::ValidateStagedComposition() -> std::vector<ChangedLayer> {
+   return changed_layers;
+ }
+ 
+-auto HwcDisplay::GetDisplayBoundsMm() -> std::pair<int32_t, int32_t> {
+-
+-  const auto bounds = GetEdid()->GetBoundsMm();
+-  if (bounds.first > 0 || bounds.second > 0) {
+-    return bounds;
+-  }
+-
+-  ALOGE("Failed to get display bounds for d=%d\n", int(handle_));
+-  // mm_width and mm_height are unreliable. so only provide mm_width to avoid
+-  // wrong dpi computations or other use of the values.
+-  return {configs_.mm_width, -1};
+-}
+-
+ auto HwcDisplay::AcceptValidatedComposition() -> void {
+   for (auto &[_, layer] : layers_) {
+     layer.AcceptTypeChange();
+@@ -621,25 +608,15 @@ HWC2::Error HwcDisplay::GetDisplayAttribute(hwc2_config_t config,
+       *value = hwc_config.mode.GetVSyncPeriodNs();
+       break;
+     case HWC2::Attribute::DpiY:
+-      *value = GetEdid()->GetDpiY();
+-      if (*value < 0) {
+-        // default to raw mode DpiX for both x and y when no good value
+-        // can be provided from edid.
+-        *value = mm_width ? int(hwc_config.mode.GetRawMode().hdisplay *
+-                                kUmPerInch / mm_width)
+-                          : -1;
+-      }
+-      break;
++      // ideally this should be vdisplay/mm_heigth, however mm_height
++      // comes from edid parsing and is highly unreliable. Viewing the
++      // rarity of anisotropic displays, falling back to a single value
++      // for dpi yield more correct output.
+     case HWC2::Attribute::DpiX:
+       // Dots per 1000 inches
+-      *value = GetEdid()->GetDpiX();
+-      if (*value < 0) {
+-        // default to raw mode DpiX for both x and y when no good value
+-        // can be provided from edid.
+-        *value = mm_width ? int(hwc_config.mode.GetRawMode().hdisplay *
+-                                kUmPerInch / mm_width)
+-                          : -1;
+-      }
++      *value = mm_width ? int(hwc_config.mode.GetRawMode().hdisplay *
++                              kUmPerInch / mm_width)
++                        : -1;
+       break;
+ #if __ANDROID_API__ > 29
+     case HWC2::Attribute::ConfigGroup:
+diff --git a/hwc2_device/HwcDisplay.h b/hwc2_device/HwcDisplay.h
+index d493597..aef669b 100644
+--- a/hwc2_device/HwcDisplay.h
++++ b/hwc2_device/HwcDisplay.h
+@@ -97,8 +97,6 @@ class HwcDisplay {
+   // Get the HwcDisplayConfig, or nullptor if none.
+   auto GetConfig(hwc2_config_t config_id) const -> const HwcDisplayConfig *;
+ 
+-  auto GetDisplayBoundsMm() -> std::pair<int32_t, int32_t>;
+-
+   // To be called after SetDisplayProperties. Returns an empty vector if the
+   // requested layers have been validated, otherwise the vector describes
+   // the requested composition type changes.
+diff --git a/hwc3/ComposerClient.cpp b/hwc3/ComposerClient.cpp
+index bc5932b..e10b149 100644
+--- a/hwc3/ComposerClient.cpp
++++ b/hwc3/ComposerClient.cpp
+@@ -275,7 +275,7 @@ class DisplayConfiguration {
+ #endif
+ 
+ DisplayConfiguration HwcDisplayConfigToAidlConfiguration(
+-    int32_t width, int32_t height, const HwcDisplayConfig& config) {
++    const HwcDisplayConfigs& configs, const HwcDisplayConfig& config) {
+   DisplayConfiguration aidl_configuration =
+       {.configId = static_cast<int32_t>(config.id),
+        .width = config.mode.GetRawMode().hdisplay,
+@@ -284,14 +284,15 @@ DisplayConfiguration HwcDisplayConfigToAidlConfiguration(
+        .vsyncPeriod = config.mode.GetVSyncPeriodNs(),
+        .hdrOutputType = static_cast<OutputType>(config.output_type)};
+ 
+-  if (width > 0) {
++  if (configs.mm_width != 0) {
++    // ideally this should be vdisplay/mm_heigth, however mm_height
++    // comes from edid parsing and is highly unreliable. Viewing the
++    // rarity of anisotropic displays, falling back to a single value
++    // for dpi yield more correct output.
+     static const float kMmPerInch = 25.4;
+-    float dpi_x = float(config.mode.GetRawMode().hdisplay) * kMmPerInch /
+-                float(width);
+-    float dpi_y = height <= 0 ? dpi_x :
+-                  float(config.mode.GetRawMode().vdisplay) * kMmPerInch /
+-                    float(height);
+-    aidl_configuration.dpi = {.x = dpi_x, .y = dpi_y};
++    float dpi = float(config.mode.GetRawMode().hdisplay) * kMmPerInch /
++                float(configs.mm_width);
++    aidl_configuration.dpi = {.x = dpi, .y = dpi};
+   }
+   // TODO: Populate vrrConfig.
+   return aidl_configuration;
+@@ -875,11 +876,9 @@ ndk::ScopedAStatus ComposerClient::getDisplayAttribute(
+     return ToBinderStatus(hwc3::Error::kBadConfig);
+   }
+ 
+-  const auto bounds = display->GetDisplayBoundsMm();
+-  DisplayConfiguration aidl_configuration =
+-      HwcDisplayConfigToAidlConfiguration(/*width =*/ bounds.first,
+-                                          /*height =*/bounds.second,
+-                                          config->second);
++  DisplayConfiguration
++      aidl_configuration = HwcDisplayConfigToAidlConfiguration(configs,
++                                                               config->second);
+   // Legacy API for querying DPI uses units of dots per 1000 inches.
+   static const int kLegacyDpiUnit = 1000;
+   switch (attribute) {
+@@ -1460,12 +1459,9 @@ ndk::ScopedAStatus ComposerClient::getDisplayConfigurations(
+   }
+ 
+   const HwcDisplayConfigs& configs = display->GetDisplayConfigs();
+-  const auto bounds = display->GetDisplayBoundsMm();
+   for (const auto& [id, config] : configs.hwc_configs) {
+     configurations->push_back(
+-        HwcDisplayConfigToAidlConfiguration(/*width =*/ bounds.first, 
+-                                            /*height =*/ bounds.second,
+-                                            config));
++        HwcDisplayConfigToAidlConfiguration(configs, config));
+   }
+   return ndk::ScopedAStatus::ok();
+ }
+diff --git a/utils/EdidWrapper.h b/utils/EdidWrapper.h
+index 651c284..1c9385b 100644
+--- a/utils/EdidWrapper.h
++++ b/utils/EdidWrapper.h
+@@ -18,7 +18,6 @@
+ 
+ #if HAS_LIBDISPLAY_INFO
+ extern "C" {
+-#include <libdisplay-info/edid.h>
+ #include <libdisplay-info/info.h>
+ }
+ #endif
+@@ -49,16 +48,6 @@ class EdidWrapper {
+   virtual void GetColorModes(std::vector<Colormode> &color_modes) {
+     color_modes.clear();
+   };
+-  virtual int GetDpiX() {
+-    return -1;
+-  }
+-  virtual int GetDpiY() {
+-    return -1;
+-  }
+-
+-  virtual auto GetBoundsMm() -> std::pair<int32_t, int32_t> {
+-    return {-1, -1};
+-  }
+ };
+ 
+ #if HAS_LIBDISPLAY_INFO
+@@ -81,17 +70,10 @@ class LibdisplayEdidWrapper final : public EdidWrapper {
+ 
+   void GetColorModes(std::vector<Colormode> &color_modes) override;
+ 
+-  auto GetDpiX() -> int override;
+-  auto GetDpiY() -> int override;
+-
+-  auto GetBoundsMm() -> std::pair<int32_t, int32_t> override;
+-
+  private:
+   LibdisplayEdidWrapper(di_info *info) : info_(std::move(info)) {
+   }
+ 
+-  std::pair<int32_t, int32_t> GetDpi();
+-
+   di_info *info_{};
+ };
+ #endif
+diff --git a/utils/LibdisplayEdidWrapper.cpp b/utils/LibdisplayEdidWrapper.cpp
+index ad737a2..6eb7184 100644
+--- a/utils/LibdisplayEdidWrapper.cpp
++++ b/utils/LibdisplayEdidWrapper.cpp
+@@ -95,51 +95,5 @@ void LibdisplayEdidWrapper::GetColorModes(std::vector<Colormode> &color_modes) {
+   }
+ }
+ 
+-auto LibdisplayEdidWrapper::GetDpiX() -> int {
+-  return GetDpi().first;
+-}
+-
+-auto LibdisplayEdidWrapper::GetDpiY() -> int {
+-  return GetDpi().second;
+-}
+-
+-auto LibdisplayEdidWrapper::GetBoundsMm() -> std::pair<int32_t, int32_t> {
+-  const auto edid = di_info_get_edid(info_);
+-  const auto detailed_timing_defs = di_edid_get_detailed_timing_defs(edid);
+-  const auto dtd = detailed_timing_defs[0];
+-  if (dtd == nullptr || dtd->horiz_image_mm == 0 || dtd->vert_image_mm == 0) {
+-    // try to fallback on display size if no dtd.
+-    // However since edid screen size are vastly unreliable only provide a valid
+-    // width to avoid invalid dpi computation.
+-    const auto screen_size = di_edid_get_screen_size(edid);
+-    return {screen_size->width_cm * 10, -1};
+-  }
+-
+-  return {dtd->horiz_image_mm, dtd->vert_image_mm};
+-}
+-
+-auto LibdisplayEdidWrapper::GetDpi() -> std::pair<int32_t, int32_t> {
+-  static const int32_t kUmPerInch = 25400;
+-  const auto edid = di_info_get_edid(info_);
+-  const auto detailed_timing_defs = di_edid_get_detailed_timing_defs(edid);
+-  const auto dtd = detailed_timing_defs[0];
+-  if (dtd == nullptr || dtd->horiz_image_mm == 0 || dtd->vert_image_mm == 0) {
+-    // try to fallback on display size if no dtd.
+-    const auto screen_size = di_edid_get_screen_size(edid);
+-    const auto standard_timings = di_edid_get_standard_timings(edid);
+-    if (screen_size->width_cm <= 0 || standard_timings == nullptr) {
+-      return {-1, -1};
+-    }
+-
+-    // display size is more unreliable so use only horizontal dpi.
+-    int32_t horiz_video = standard_timings[0]->horiz_video;
+-    int32_t dpi = horiz_video * kUmPerInch / (screen_size->width_cm * 10);
+-    return {dpi, dpi};
+-  }
+-
+-  return {dtd->horiz_video * kUmPerInch / dtd->horiz_image_mm,
+-          dtd->vert_video * kUmPerInch / dtd->vert_image_mm};
+-}
+-
+ }  // namespace android
+ #endif
+-- 
+2.34.1
+

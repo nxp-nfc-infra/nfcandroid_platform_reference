@@ -18,7 +18,7 @@ Description and Comments:   PN7220/21 and PN716x NFC Android Common Middleware f
 Release Location:           https://github.com/nxp-nfc-infra/nfcandroid_frameworks
 Origin:                     NXP proprietary
                             The Android Open Source Project (Apache-2.0) -
-                            https://android.googlesource.com/platform/frameworks/base/+/refs/heads/android14-release
+                            https://android.googlesource.com/
 --------------------------------------------
 Repository:                 nfcandroid_infra_comm
 Description and Comments:   PN7220/21 Android Infra common Libraries
@@ -29,20 +29,14 @@ Repository:                 nfcandroid_nfc_hidlimpl
 Description and Comments:   PN7220/21 and PN716x NFC Android Common Middleware hardware abstraction layer
 Release Location:           https://github.com/nxp-nfc-infra/nfcandroid_nfc_hidlimpl
 Origin:                     The Android Open Source Project (Apache-2.0) -
-                            https://android.googlesource.com/platform/hardware/nxp/nfc/+/refs/heads/android14-release
+                            https://android.googlesource.com/
 --------------------------------------------
-Repository:                 nxp_nci_hal_libnfc-nci
+Repository:                 nfcandroid_modules_nfc
 Description and Comments:   PN7220/21 and PN716x NFC Android Common Middleware
-Release Location:           https://github.com/nxp-nfc-infra/nxp_nci_hal_libnfc-nci
+                            Contains NFC Interfaces & Public APIS for Google AOSP, and NFC Service, JNI & NCI based nfc stack
+Release Location:           https://github.com/nxp-nfc-infra/nfcandroid_modules_nfc
 Origin:                     The Android Open Source Project (Apache-2.0) -
-                            https://android.googlesource.com/platform/system/nfc/+/refs/heads/android14-release
---------------------------------------------
-Repository:                 nxp_nci_hal_nfc
-Description and Comments:   PN7220/21 and PN716x NFC Android Common Middleware
-                            Contains NFC Service and Java Native Apis
-Release Location:           https://github.com/nxp-nfc-infra/nxp_nci_hal_nfc
-Origin:                     The Android Open Source Project (Apache-2.0) -
-                            https://android.googlesource.com/platform/packages/apps/Nfc/+/refs/heads/android14-release
+                            https://android.googlesource.com/
                             NXP (Apache-2.0)
 --------------------------------------------
 

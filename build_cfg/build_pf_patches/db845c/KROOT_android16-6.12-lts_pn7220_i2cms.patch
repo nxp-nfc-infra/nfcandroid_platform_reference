@@ -1,0 +1,233 @@
+diff --git a/BUILD.bazel b/BUILD.bazel
+index 680f6a9708ed..ee4e48f317e5 100644
+--- a/BUILD.bazel
++++ b/BUILD.bazel
+@@ -734,6 +734,7 @@ _DB845C_MODULE_OUTS = [
+     "drivers/net/wireless/ath/ath11k/ath11k_pci.ko",
+     "drivers/net/wireless/ath/ath12k/ath12k.ko",
+     "drivers/nvmem/nvmem_qfprom.ko",
++    "drivers/nxp/nfc/nxpnfc_i2c.ko",
+     "drivers/pci/pwrctrl/pci-pwrctrl-core.ko",
+     "drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.ko",
+     "drivers/phy/qualcomm/phy-qcom-eusb2-repeater.ko",
+diff --git a/arch/arm64/boot/dts/qcom/sdm845-db845c.dts b/arch/arm64/boot/dts/qcom/sdm845-db845c.dts
+index 9a6d3d0c0ee4..ca19518eb0f5 100644
+--- a/arch/arm64/boot/dts/qcom/sdm845-db845c.dts
++++ b/arch/arm64/boot/dts/qcom/sdm845-db845c.dts
+@@ -516,14 +516,42 @@ lt9611_out: endpoint {
+ 
+ &i2c11 {
+ 	/* On Low speed expansion */
+-	clock-frequency = <100000>;
++	clock-frequency = <1000000>;
+ 	status = "okay";
++	nxpnfc@28 {
++		compatible = "nxp,nxpnfc";
++		reg = <0x28>;
++		nxp,nxpnfc-irq = <&tlmm 49 00>;
++		nxp,nxpnfc-ven = <&tlmm 79 00>;
++		nxp,nxpnfc-i2c_sw = <&tlmm 28 00>;
++		nxp,nxpnfc-mode_sw = <&tlmm 26 00>;
++		nxp,nxpnfc-mode_sw_sp = <&tlmm 9 00>;
++		nxp,nxpnfc-mode_sw_sp_done = <&tlmm 52 00>;
++		nxp,nxpnfc-led1 = <&tlmm 41 00>;
++		nxp,nxpnfc-led2 = <&tlmm 43 00>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&io_supply_activate>;
++	};
++	nxpnfc_m@38 {
++		compatible = "nxp,nxpnfc_m";
++		reg = <0x38>;
++		nxp,nxpnfc-irq = <&tlmm 49 00>;
++		nxp,nxpnfc-ven = <&tlmm 79 00>;
++		nxp,nxpnfc-i2c_sw = <&tlmm 28 00>;
++		nxp,nxpnfc-mode_sw = <&tlmm 26 00>;
++		nxp,nxpnfc-mode_sw_sp = <&tlmm 9 00>;
++		nxp,nxpnfc-mode_sw_sp_done = <&tlmm 52 00>;
++		nxp,nxpnfc-led1 = <&tlmm 41 00>;
++		nxp,nxpnfc-led2 = <&tlmm 43 00>;
++		pinctrl-names = "default";
++		pinctrl-0 = <&io_supply_activate>;
++	};
+ };
+ 
+ &i2c14 {
+ 	/* On Low speed expansion */
+ 	clock-frequency = <100000>;
+-	status = "okay";
++	status = "disabled";
+ };
+ 
+ &mdss {
+@@ -922,6 +950,15 @@ dsi_sw_sel: dsi-sw-sel-state {
+ 		output-high;
+ 	};
+ 
++	io_supply_activate: io_supply_activate {
++		pins = "gpio8";
++		function = "gpio";
++
++		drive-strength = <2>;
++		bias-disable;
++		output-high;
++	};
++
+ 	lt9611_irq_pin: lt9611-irq-state {
+ 		pins = "gpio84";
+ 		function = "gpio";
+diff --git a/arch/arm64/boot/dts/qcom/sdm845.dtsi b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+index 0a0cef9dfcc4..3274f3a2b716 100644
+--- a/arch/arm64/boot/dts/qcom/sdm845.dtsi
++++ b/arch/arm64/boot/dts/qcom/sdm845.dtsi
+@@ -2891,6 +2891,8 @@ qup_i2c10_default: qup-i2c10-default-state {
+ 			qup_i2c11_default: qup-i2c11-default-state {
+ 				pins = "gpio31", "gpio32";
+ 				function = "qup11";
++				drive-strength = <6>;
++				bias-disable;
+ 			};
+ 
+ 			qup_i2c12_default: qup-i2c12-default-state {
+@@ -2906,6 +2908,8 @@ qup_i2c13_default: qup-i2c13-default-state {
+ 			qup_i2c14_default: qup-i2c14-default-state {
+ 				pins = "gpio33", "gpio34";
+ 				function = "qup14";
++				drive-strength = <2>;
++				bias-pull-down;
+ 			};
+ 
+ 			qup_i2c15_default: qup-i2c15-default-state {
+diff --git a/arch/arm64/configs/db845c_gki.fragment b/arch/arm64/configs/db845c_gki.fragment
+index 363a46569ff2..eaa7bafa26c0 100644
+--- a/arch/arm64/configs/db845c_gki.fragment
++++ b/arch/arm64/configs/db845c_gki.fragment
+@@ -5,6 +5,7 @@ CONFIG_SCSI_UFS_QCOM=m
+ CONFIG_INPUT_PM8941_PWRKEY=m
+ CONFIG_SERIAL_MSM=m
+ CONFIG_I2C_QCOM_GENI=m
++CONFIG_NXP_NFC_I2C=m
+ CONFIG_I2C_QUP=m
+ CONFIG_PINCTRL_MSM=m
+ CONFIG_PINCTRL_QCOM_SPMI_PMIC=m
+diff --git a/drivers/Kconfig b/drivers/Kconfig
+index 7bdad836fc62..8ad434579eb0 100644
+--- a/drivers/Kconfig
++++ b/drivers/Kconfig
+@@ -245,4 +245,6 @@ source "drivers/cdx/Kconfig"
+ 
+ source "drivers/dpll/Kconfig"
+ 
++source "drivers/nxp/Kconfig"
++
+ endmenu
+diff --git a/drivers/Makefile b/drivers/Makefile
+index 45d1c3e630f7..4dae223a8bad 100644
+--- a/drivers/Makefile
++++ b/drivers/Makefile
+@@ -195,3 +195,4 @@ obj-$(CONFIG_CDX_BUS)		+= cdx/
+ obj-$(CONFIG_DPLL)		+= dpll/
+ 
+ obj-$(CONFIG_S390)		+= s390/
++obj-y				+= nxp/
+diff --git a/drivers/i2c/busses/i2c-qcom-geni.c b/drivers/i2c/busses/i2c-qcom-geni.c
+index 212336f724a6..98d3bae8598b 100644
+--- a/drivers/i2c/busses/i2c-qcom-geni.c
++++ b/drivers/i2c/busses/i2c-qcom-geni.c
+@@ -149,7 +149,7 @@ struct geni_i2c_clk_fld {
+ static const struct geni_i2c_clk_fld geni_i2c_clk_map[] = {
+ 	{KHZ(100), 7, 10, 11, 26},
+ 	{KHZ(400), 2,  5, 12, 24},
+-	{KHZ(1000), 1, 3,  9, 18},
++	{KHZ(1000), 1, 3,  6, 15},
+ };
+ 
+ static int geni_i2c_clk_map_idx(struct geni_i2c_dev *gi2c)
+@@ -406,29 +406,29 @@ static int geni_i2c_rx_one_msg(struct geni_i2c_dev *gi2c, struct i2c_msg *msg,
+ {
+ 	dma_addr_t rx_dma = 0;
+ 	unsigned long time_left;
+-	void *dma_buf;
++	void *dma_buf = NULL;
+ 	struct geni_se *se = &gi2c->se;
+ 	size_t len = msg->len;
+ 	struct i2c_msg *cur;
+-
+-	dma_buf = i2c_get_dma_safe_msg_buf(msg, 32);
+-	if (dma_buf)
+-		geni_se_select_mode(se, GENI_SE_DMA);
+-	else
++	//Enabled FIFO mode explicitly
++	/*dma_buf = i2c_get_dma_safe_msg_buf(msg, 32);
++	 if (dma_buf)
++	 	geni_se_select_mode(se, GENI_SE_DMA);
++	 else*/
+ 		geni_se_select_mode(se, GENI_SE_FIFO);
+ 
+ 	writel_relaxed(len, se->base + SE_I2C_RX_TRANS_LEN);
+ 	geni_se_setup_m_cmd(se, I2C_READ, m_param);
+-
+-	if (dma_buf && geni_se_rx_dma_prep(se, dma_buf, len, &rx_dma)) {
+-		geni_se_select_mode(se, GENI_SE_FIFO);
+-		i2c_put_dma_safe_msg_buf(dma_buf, msg, false);
+-		dma_buf = NULL;
+-	} else {
++	//Enabled FIFO mode explicitly
++	/* if (dma_buf && geni_se_rx_dma_prep(se, dma_buf, len, &rx_dma)) {
++	 	geni_se_select_mode(se, GENI_SE_FIFO);
++	 	i2c_put_dma_safe_msg_buf(dma_buf, msg, false);
++	 	dma_buf = NULL;
++	 } else {*/
+ 		gi2c->xfer_len = len;
+ 		gi2c->dma_addr = rx_dma;
+ 		gi2c->dma_buf = dma_buf;
+-	}
++	// }
+ 
+ 	cur = gi2c->cur;
+ 	time_left = wait_for_completion_timeout(&gi2c->done, XFER_TIMEOUT);
+@@ -445,15 +445,15 @@ static int geni_i2c_tx_one_msg(struct geni_i2c_dev *gi2c, struct i2c_msg *msg,
+ {
+ 	dma_addr_t tx_dma = 0;
+ 	unsigned long time_left;
+-	void *dma_buf;
++	void *dma_buf = NULL;
+ 	struct geni_se *se = &gi2c->se;
+ 	size_t len = msg->len;
+ 	struct i2c_msg *cur;
+-
+-	dma_buf = i2c_get_dma_safe_msg_buf(msg, 32);
+-	if (dma_buf)
+-		geni_se_select_mode(se, GENI_SE_DMA);
+-	else
++	//Enabled FIFO mode explicitly
++	/* dma_buf = i2c_get_dma_safe_msg_buf(msg, 32);
++	 if (dma_buf)
++	 	geni_se_select_mode(se, GENI_SE_DMA);
++	 else */
+ 		geni_se_select_mode(se, GENI_SE_FIFO);
+ 
+ 	writel_relaxed(len, se->base + SE_I2C_TX_TRANS_LEN);
+diff --git a/gki/aarch64/symbols/db845c b/gki/aarch64/symbols/db845c
+index 7a3c4d98e642..1a1289379f83 100644
+--- a/gki/aarch64/symbols/db845c
++++ b/gki/aarch64/symbols/db845c
+@@ -1712,6 +1712,19 @@
+ # required by nvmem_qfprom.ko
+   devm_nvmem_register
+ 
++#required by nxp nxpnfc_i2c.ko
++  __dynamic_pr_debug
++  cdev_add
++  cdev_del
++  class_create
++  class_destroy
++  device_create
++  device_destroy
++  gpio_free
++  gpio_request
++  gpiod_direction_input
++  gpiod_get_raw_value
++
+ # required by ohci-hcd.ko
+   dma_pool_create
+   dma_pool_destroy
