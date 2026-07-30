@@ -1,0 +1,26 @@
+diff --git a/liblog/logger_write.cpp b/liblog/logger_write.cpp
+index 3752fb76..e73b3a24 100644
+--- a/liblog/logger_write.cpp
++++ b/liblog/logger_write.cpp
+@@ -64,7 +64,7 @@
+ 
+ using android::base::ErrnoRestorer;
+ 
+-#define LOG_BUF_SIZE 1024
++#define LOG_BUF_SIZE 2048
+ 
+ #if defined(__ANDROID__)
+ static int check_log_uid_permissions() {
+diff --git a/logd/LogSize.h b/logd/LogSize.h
+index d5716ff4..7f9f7571 100644
+--- a/logd/LogSize.h
++++ b/logd/LogSize.h
+@@ -20,7 +20,7 @@
+ 
+ #include <log/log.h>
+ 
+-static constexpr size_t kDefaultLogBufferSize = 256 * 1024;
++static constexpr size_t kDefaultLogBufferSize = 16 * 1024 * 1024;
+ static constexpr size_t kLogBufferMinSize = 64 * 1024;
+ static constexpr size_t kLogBufferMaxSize = 256 * 1024 * 1024;
+ 

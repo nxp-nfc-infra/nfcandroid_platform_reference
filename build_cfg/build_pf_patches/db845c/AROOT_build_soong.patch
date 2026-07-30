@@ -1,0 +1,86 @@
+From cdaa7fe1cff263402b05058a2f53e7456380be91 Mon Sep 17 00:00:00 2001
+From: nxf97491 <ramyesh.thanthri@nxp.com>
+Date: Wed, 17 Sep 2025 12:34:36 +0530
+Subject: [PATCH] Revert "Enhance vendor_ramdisk to PRODUCT_COPY_FILES
+ handling"
+
+This reverts commit e628bc150c346149af49704a809c4ed896a2f132.
+---
+ fsgen/prebuilt_etc_modules_gen.go | 34 ++++++++++++++++++-------------
+ 1 file changed, 20 insertions(+), 14 deletions(-)
+
+diff --git a/fsgen/prebuilt_etc_modules_gen.go b/fsgen/prebuilt_etc_modules_gen.go
+index 6fb2658560..b1c1d8a622 100644
+--- a/fsgen/prebuilt_etc_modules_gen.go
++++ b/fsgen/prebuilt_etc_modules_gen.go
+@@ -133,13 +133,17 @@ type partitionToInstallPath struct {
+ }
+ 
+ func getPartitionToInstallPathList(ctx android.LoadHookContext) []partitionToInstallPath {
++	vendorRamdiskPartition := "vendor_ramdisk"
++	if ctx.DeviceConfig().BoardMoveRecoveryResourcesToVendorBoot() {
++		vendorRamdiskPartition = "vendor_ramdisk/first_stage_ramdisk"
++	}
+ 	// System is intentionally added at the last to consider the scenarios where
+ 	// non-system partitions are installed as part of the system partition
+ 	partitionToInstallPathList := []partitionToInstallPath{
+ 		{name: "recovery", installPath: "recovery/root"},
+ 		{name: "vendor", installPath: ctx.DeviceConfig().VendorPath()},
+ 		{name: "vendor_dlkm", installPath: ctx.DeviceConfig().VendorDlkmPath()},
+-		{name: "vendor_ramdisk", installPath: "vendor_ramdisk"},
++		{name: "vendor_ramdisk", installPath: vendorRamdiskPartition},
+ 		{name: "product", installPath: ctx.DeviceConfig().ProductPath()},
+ 		{name: "system_ext", installPath: ctx.DeviceConfig().SystemExtPath()},
+ 		{name: "system", installPath: "system"},
+@@ -173,15 +177,14 @@ type prebuiltModuleProperties struct {
+ 
+ 	From_product_copy_files *bool
+ 
+-	Soc_specific                              *bool
+-	Product_specific                          *bool
+-	System_ext_specific                       *bool
+-	Vendor_dlkm_specific                      *bool
+-	Recovery                                  *bool
+-	Ramdisk                                   *bool
+-	Vendor_ramdisk                            *bool
+-	Install_in_root                           *bool
+-	Install_path_skip_first_stage_ramdisk_dir *bool
++	Soc_specific         *bool
++	Product_specific     *bool
++	System_ext_specific  *bool
++	Vendor_dlkm_specific *bool
++	Recovery             *bool
++	Ramdisk              *bool
++	Vendor_ramdisk       *bool
++	Install_in_root      *bool
+ 
+ 	Srcs []string
+ 
+@@ -222,7 +225,7 @@ var (
+ 		"first_stage_ramdisk": etc.PrebuiltFirstStageRamdiskFactory,
+ 		"fonts":               etc.PrebuiltFontFactory,
+ 		"framework":           etc.PrebuiltFrameworkFactory,
+-		"lib":                 etc.PrebuiltLibFactory,
++		"lib":                 etc.PrebuiltRenderScriptBitcodeFactory,
+ 		"lib64":               etc.PrebuiltRenderScriptBitcodeFactory,
+ 		"lib/rfsa":            etc.PrebuiltRFSAFactory,
+ 		"media":               etc.PrebuiltMediaFactory,
+@@ -298,9 +301,12 @@ func prebuiltEtcModuleProps(ctx android.LoadHookContext, moduleName, partition,
+ 		moduleProps.Vendor_dlkm_specific = proptools.BoolPtr(true)
+ 	case "vendor_ramdisk":
+ 		moduleProps.Vendor_ramdisk = proptools.BoolPtr(true)
+-		// Enforce partition path to be "TARGET_COPY_OUT_VENDOR_RAMDISK" by skipping "first_stage_ramdisk".
+-		moduleProps.Install_path_skip_first_stage_ramdisk_dir = proptools.BoolPtr(true)
+-		moduleProps.Install_in_root = proptools.BoolPtr(true)
++		if destDir == "." {
++			moduleProps.Install_in_root = proptools.BoolPtr(true)
++		} else {
++			// TODO: handle PRODUCT_COPY_FILES which install file
++			// to a location that is _not_ vendor_ramdisk/first_stage_ramdisk.
++		}
+ 	case "recovery":
+ 		// To match the logic in modulePartition() in android/paths.go
+ 		if ctx.DeviceConfig().BoardUsesRecoveryAsBoot() && strings.HasPrefix(destDir, "first_stage_ramdisk") {
+-- 
+2.25.1
+

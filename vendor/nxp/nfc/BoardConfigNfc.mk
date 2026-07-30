@@ -15,6 +15,5 @@
 LOCAL_STEM := nfc/BoardConfigNfcPartial.mk
 DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE := vendor/nxp/nfc/framework_compatibility_matrix.xml
 DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE += vendor/nxp/emvco/emvco_framework_compatibility_matrix.xml
-BUILD_BROKEN_DUP_RULES := true
 
 -include vendor/nxp/$(LOCAL_STEM)
